@@ -46,7 +46,7 @@ h4 { margin:14px 0 10px; color:#38bdf8; }
   <div class="brand">
     <img src="UPLA.jpg" alt="Logo">
     <div>
-      <div class="title">DAGA</div>
+      <div class="title">CARLOS DANIEL GUERRA YARUPAITA</div>
       <div class="subtitle">Portafolio Cursos</div>
     </div>
   </div>
@@ -58,10 +58,10 @@ h4 { margin:14px 0 10px; color:#38bdf8; }
   </nav>
   <div class="controls">
     <select id="cursoSelect">
+      <option value="Arquitectura de Datos" selected>Arquitectura de Datos</option>
       <option value="Inglés IV">Inglés IV</option>
       <option value="Gobierno de TI">Gobierno de TI</option>
       <option value="Machine Learning">Machine Learning</option>
-      <option value="Arquitectura de Datos" selected>Arquitectura de Datos</option>
     </select>
     <div id="userGreeting" class="small">Bienvenido, invitado</div>
     <button id="loginBtn">Login</button>
@@ -117,7 +117,7 @@ const semanaSelect=document.getElementById("semana");
 const vistaPanel=document.getElementById("vistaPanel");
 const guardarBtn=document.getElementById("guardarBtn");
 
-const cursos=["Inglés IV","Gobierno de TI","Machine Learning","Arquitectura de Datos"];
+const cursos=["Arquitectura de Datos","Inglés IV","Gobierno de TI","Machine Learning"];
 
 // POBLAR SELECTS
 cursos.forEach(c=>{
@@ -270,6 +270,7 @@ cursoSelect.onchange=mostrarArchivos;
 </script>
 </body>
 </html>
+
 
 
 
