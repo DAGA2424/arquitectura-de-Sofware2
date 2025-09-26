@@ -36,7 +36,6 @@ h4 { margin:14px 0 10px; color:#38bdf8; }
 .btn-delete { background:#ef4444; color:white; border:none; padding:6px 12px; border-radius:8px; font-size:13px; cursor:pointer; }
 .overlay { position:absolute; inset:0; background:rgba(0,0,0,0.7); color:white; display:flex; align-items:center; justify-content:center; opacity:0; transition:0.3s; font-size:14px; font-weight:600; text-align:center; pointer-events:none; z-index:1; }
 .file-item:hover .overlay { opacity:1; }
-/* PANEL DE VISTA */
 #vistaPanel { background:#0f172a; border:1px solid #475569; border-radius:10px; padding:16px; min-height:500px; width:100%; display:none; align-items:center; justify-content:center; position:relative; }
 #vistaPanel iframe, #vistaPanel img { width:100%; height:800px; border:none; border-radius:8px; }
 #closeVista { position:absolute; top:10px; right:10px; background:#ef4444; color:white; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; z-index:20; }
@@ -75,8 +74,8 @@ h4 { margin:14px 0 10px; color:#38bdf8; }
     <select id="cursoUpload"></select><br><br>
     <label for="semana">Selecciona semana:</label>
     <select id="semana"></select><br><br>
-    <input type="file" id="fileUpload"><br><br>
-    <button onclick="guardar()">Guardar</button>
+    <input type="file" id="fileUpload" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp"><br><br>
+    <button id="guardarBtn">Guardar</button>
   </div>
 
   <div id="vistaPanel" class="panel">
@@ -91,7 +90,6 @@ h4 { margin:14px 0 10px; color:#38bdf8; }
   </div>
 </main>
 
-<!-- MODAL LOGIN -->
 <div id="modal" style="display:none;position:fixed;inset:0;background:rgba(2,6,23,0.6);align-items:center;justify-content:center;z-index:1200;">
   <div style="background:white;padding:18px;border-radius:10px;width:320px;box-shadow:0 8px 30px rgba(2,6,23,0.4);">
     <h3>Iniciar sesión</h3>
@@ -117,117 +115,134 @@ const cursoSelect=document.getElementById("cursoSelect");
 const cursoUpload=document.getElementById("cursoUpload");
 const semanaSelect=document.getElementById("semana");
 const vistaPanel=document.getElementById("vistaPanel");
+const guardarBtn=document.getElementById("guardarBtn");
 
 const cursos=["Inglés IV","Gobierno de TI","Machine Learning","Arquitectura de Datos"];
 
-// Inicializar estructura en localStorage solo si aún no existe
-if(!localStorage.getItem("docs")){
-  let initDocs={};
-  cursos.forEach(c=>{initDocs[c]={}; for(let i=1;i<=16;i++){initDocs[c]["Semana "+i]=[];}});
-  localStorage.setItem("docs",JSON.stringify(initDocs));
-}
+// INICIALIZAR INDEXEDDB
+let db;
+const request=indexedDB.open("PortafolioDB",1);
+request.onupgradeneeded=function(e){
+  db=e.target.result;
+  if(!db.objectStoreNames.contains("docs")){
+    const store=db.createObjectStore("docs",{ keyPath:"id", autoIncrement:true });
+    store.createIndex("curso_semana","curso_semana",{ unique:false });
+  }
+};
+request.onsuccess=function(e){ db=e.target.result; mostrarArchivos(); };
+request.onerror=function(e){ alert("Error inicializando IndexedDB"); };
 
-cursos.forEach(c=>{
-  let opt=document.createElement("option");
-  opt.value=c; opt.textContent=c;
-  cursoUpload.appendChild(opt);
-});
-for(let i=1;i<=16;i++){
-  let opt=document.createElement("option");
-  opt.value="Semana "+i; opt.textContent="Semana "+i;
-  semanaSelect.appendChild(opt);
-}
-
+// LOGIN
 loginBtn.onclick=()=>modal.style.display="flex";
 closeModal.onclick=()=>modal.style.display="none";
-
 doLogin.onclick=()=>{
   let user=document.getElementById("username").value.trim();
   let pass=document.getElementById("password").value.trim();
-  if(user==="DAGA"&&pass==="74128745"){
+  if(user==="DAGA" && pass==="74128745"){
     modal.style.display="none";
     localStorage.setItem("logged","DAGA");
     userGreeting.textContent="Bienvenido, "+user;
     uploadPanel.classList.remove("hidden");
     logoutBtn.classList.remove("hidden");
     mostrarArchivos();
-  } else {
-    alert("Usuario o contraseña incorrectos");
-  }
+  } else alert("Usuario o contraseña incorrectos");
 };
 
-function guardar(){
-  let curso=cursoUpload.value;
-  let semana=semanaSelect.value;
-  let file=document.getElementById("fileUpload").files[0];
-  if(file){
-    let reader=new FileReader();
-    reader.onload=function(e){
-      let docs=JSON.parse(localStorage.getItem("docs"))||{};
-      docs[curso][semana].push({name:file.name,data:e.target.result});
-      localStorage.setItem("docs",JSON.stringify(docs));
-      mostrarArchivos();
-    };
-    reader.readAsDataURL(file);
-  } else alert("Selecciona un archivo");
+// GUARDAR ARCHIVO (hasta 20MB)
+guardarBtn.onclick=()=>{
+  const file=document.getElementById("fileUpload").files[0];
+  if(!file){ alert("Selecciona un archivo"); return; }
+  if(file.size > 20*1024*1024){ alert("Archivo demasiado grande. Máx 20MB"); return; }
+  const curso=cursoUpload.value;
+  const semana=semanaSelect.value;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const transaction=db.transaction(["docs"],"readwrite");
+    const store=transaction.objectStore("docs");
+    store.add({
+      curso:curso,
+      semana:semana,
+      curso_semana:[curso,semana],
+      name:file.name,
+      data:e.target.result
+    });
+    transaction.oncomplete=()=>{ mostrarArchivos(); };
+  };
+  reader.readAsDataURL(file);
+};
+
+// MOSTRAR ARCHIVOS
+function mostrarArchivos(){
+  if(!db) return;
+  const transaction=db.transaction(["docs"],"readonly");
+  const store=transaction.objectStore("docs");
+  const index=store.index("curso_semana");
+  docsContainer.innerHTML="";
+  const curso=cursoSelect.value;
+  const logged=localStorage.getItem("logged");
+  const req=index.openCursor();
+  let gridMap={};
+  req.onsuccess=function(e){
+    const cursor=e.target.result;
+    if(cursor){
+      const f=cursor.value;
+      if(f.curso===curso){
+        if(!gridMap[f.semana]) gridMap[f.semana]=[];
+        gridMap[f.semana].push(f);
+      }
+      cursor.continue();
+    } else {
+      // mostrar
+      Object.keys(gridMap).sort((a,b)=>parseInt(a.replace("Semana ",""))-parseInt(b.replace("Semana ",""))).forEach(semana=>{
+        let h4=document.createElement("h4"); h4.textContent=semana; docsContainer.appendChild(h4);
+        let grid=document.createElement("div"); grid.className="files-grid";
+        gridMap[semana].forEach(f=>{
+          const ext=f.name.split('.').pop().toLowerCase();
+          let preview="";
+          if(["png","jpg","jpeg","gif","webp"].includes(ext)) preview=`<img src="${f.data}">`;
+          else if(ext==="pdf") preview=`<iframe src="${f.data}"></iframe>`;
+          else preview=`<div style="padding:10px;text-align:center;">📄</div>`;
+          let div=document.createElement("div");
+          div.className="file-item";
+          div.innerHTML=`
+            <div class="file-preview">${preview}</div>
+            <div class="file-name">${f.name}</div>
+            <div class="file-actions">
+              <a href="${f.data}" target="_blank" class="btn-view" onclick='mostrarVista(${JSON.stringify(f)});return false;'>Ver</a>
+              <a href="${f.data}" download="${f.name}" class="btn-download">Descargar</a>
+              ${logged==="DAGA"?`<button class="btn-delete" onclick="eliminar(${f.id})">Eliminar</button>`:""}
+            </div>
+            <div class="overlay">${curso} — ${f.semana}</div>
+          `;
+          grid.appendChild(div);
+        });
+        docsContainer.appendChild(grid);
+      });
+    }
+  };
 }
 
+// MOSTRAR VISTA
 function mostrarVista(file){
   let ext=file.name.split('.').pop().toLowerCase();
   let html="";
   if(["png","jpg","jpeg","gif","webp"].includes(ext)) html=`<img src="${file.data}">`;
   else if(ext==="pdf") html=`<iframe src="${file.data}"></iframe>`;
-  else html=`<div>📄 ${file.name}</div>`;
+  else html=`<div style="padding:10px;text-align:center;">📄 ${file.name}</div>`;
   vistaPanel.innerHTML=`<button id="closeVista" onclick="cerrarVista()">✖ Cerrar</button>`+html;
   vistaPanel.style.display="flex";
 }
+function cerrarVista(){ vistaPanel.style.display="none"; vistaPanel.innerHTML=`<button id="closeVista" onclick="cerrarVista()">✖ Cerrar</button>`; }
 
-function cerrarVista(){
-  vistaPanel.innerHTML=`<button id="closeVista" onclick="cerrarVista()">✖ Cerrar</button>`;
-  vistaPanel.style.display="none";
+// ELIMINAR ARCHIVO
+function eliminar(id){
+  const transaction=db.transaction(["docs"],"readwrite");
+  const store=transaction.objectStore("docs");
+  store.delete(id);
+  transaction.oncomplete=()=>{ mostrarArchivos(); };
 }
 
-function mostrarArchivos(){
-  let docs=JSON.parse(localStorage.getItem("docs"))||{};
-  docsContainer.innerHTML="";
-  const logged=localStorage.getItem("logged");
-  const curso=cursoSelect.value;
-  let semanas=Object.keys(docs[curso]).sort((a,b)=>parseInt(a.replace("Semana ",""))-parseInt(b.replace("Semana ","")));
-  semanas.forEach(semana=>{
-    let h4=document.createElement("h4");h4.textContent=semana;
-    docsContainer.appendChild(h4);
-    let grid=document.createElement("div");grid.className="files-grid";
-    docs[curso][semana].forEach((f,i)=>{
-      let ext=f.name.split('.').pop().toLowerCase();
-      let preview="";
-      if(["png","jpg","jpeg","gif","webp"].includes(ext)) preview=`<img src="${f.data}">`;
-      else if(ext==="pdf") preview=`<iframe src="${f.data}"></iframe>`;
-      else preview=`<div style="padding:10px;text-align:center;">📄</div>`;
-      let div=document.createElement("div");
-      div.className="file-item";
-      div.innerHTML=`
-        <div class="file-preview">${preview}</div>
-        <div class="file-name">${f.name}</div>
-        <div class="file-actions">
-          <a href="${f.data}" target="_blank" class="btn-view" onclick='mostrarVista(${JSON.stringify(f)});return false;'>Ver</a>
-          <a href="${f.data}" download="${f.name}" class="btn-download">Descargar</a>
-          ${logged==="DAGA"?`<button class="btn-delete" onclick="eliminar('${curso}','${semana}',${i})">Eliminar</button>`:""}
-        </div>
-        <div class="overlay">${curso} — ${semana}</div>
-      `;
-      grid.appendChild(div);
-    });
-    docsContainer.appendChild(grid);
-  });
-}
-
-function eliminar(curso,semana,index){
-  let docs=JSON.parse(localStorage.getItem("docs"));
-  docs[curso][semana].splice(index,1);
-  localStorage.setItem("docs",JSON.stringify(docs));
-  mostrarArchivos();
-}
-
+// LOGOUT
 function logout(){
   localStorage.removeItem("logged");
   uploadPanel.classList.add("hidden");
@@ -237,13 +252,15 @@ function logout(){
   mostrarArchivos();
 }
 
+// ONLOAD
 window.onload=()=>{
   const logged=localStorage.getItem("logged");
-  if(logged==="DAGA"){userGreeting.textContent="Bienvenido, DAGA"; uploadPanel.classList.remove("hidden"); logoutBtn.classList.remove("hidden");}
-  else userGreeting.textContent="Bienvenido, invitado";
+  if(logged==="DAGA"){ userGreeting.textContent="Bienvenido, DAGA"; uploadPanel.classList.remove("hidden"); logoutBtn.classList.remove("hidden"); }
   mostrarArchivos();
 };
+
 cursoSelect.onchange=mostrarArchivos;
 </script>
 </body>
 </html>
+
