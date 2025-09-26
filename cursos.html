@@ -119,7 +119,17 @@ const guardarBtn=document.getElementById("guardarBtn");
 
 const cursos=["Inglés IV","Gobierno de TI","Machine Learning","Arquitectura de Datos"];
 
-// INICIALIZAR INDEXEDDB
+// POBLAR SELECTS
+cursos.forEach(c=>{
+  let opt=document.createElement("option");
+  opt.value=c; opt.textContent=c; cursoUpload.appendChild(opt);
+});
+for(let i=1;i<=16;i++){
+  let opt=document.createElement("option");
+  opt.value="Semana "+i; opt.textContent="Semana "+i; semanaSelect.appendChild(opt);
+}
+
+// INDEXEDDB
 let db;
 const request=indexedDB.open("PortafolioDB",1);
 request.onupgradeneeded=function(e){
@@ -176,11 +186,9 @@ function mostrarArchivos(){
   if(!db) return;
   const transaction=db.transaction(["docs"],"readonly");
   const store=transaction.objectStore("docs");
-  const index=store.index("curso_semana");
-  docsContainer.innerHTML="";
+  const req=store.openCursor();
   const curso=cursoSelect.value;
   const logged=localStorage.getItem("logged");
-  const req=index.openCursor();
   let gridMap={};
   req.onsuccess=function(e){
     const cursor=e.target.result;
@@ -192,7 +200,7 @@ function mostrarArchivos(){
       }
       cursor.continue();
     } else {
-      // mostrar
+      docsContainer.innerHTML="";
       Object.keys(gridMap).sort((a,b)=>parseInt(a.replace("Semana ",""))-parseInt(b.replace("Semana ",""))).forEach(semana=>{
         let h4=document.createElement("h4"); h4.textContent=semana; docsContainer.appendChild(h4);
         let grid=document.createElement("div"); grid.className="files-grid";
@@ -222,7 +230,7 @@ function mostrarArchivos(){
   };
 }
 
-// MOSTRAR VISTA
+// VISTA
 function mostrarVista(file){
   let ext=file.name.split('.').pop().toLowerCase();
   let html="";
@@ -234,7 +242,7 @@ function mostrarVista(file){
 }
 function cerrarVista(){ vistaPanel.style.display="none"; vistaPanel.innerHTML=`<button id="closeVista" onclick="cerrarVista()">✖ Cerrar</button>`; }
 
-// ELIMINAR ARCHIVO
+// ELIMINAR
 function eliminar(id){
   const transaction=db.transaction(["docs"],"readwrite");
   const store=transaction.objectStore("docs");
@@ -258,9 +266,9 @@ window.onload=()=>{
   if(logged==="DAGA"){ userGreeting.textContent="Bienvenido, DAGA"; uploadPanel.classList.remove("hidden"); logoutBtn.classList.remove("hidden"); }
   mostrarArchivos();
 };
-
 cursoSelect.onchange=mostrarArchivos;
 </script>
 </body>
 </html>
+
 
