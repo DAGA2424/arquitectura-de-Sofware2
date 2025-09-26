@@ -139,7 +139,10 @@ request.onupgradeneeded=function(e){
     store.createIndex("curso_semana","curso_semana",{ unique:false });
   }
 };
-request.onsuccess=function(e){ db=e.target.result; mostrarArchivos(); };
+request.onsuccess=function(e){ 
+  db=e.target.result; 
+  mostrarArchivos();
+};
 request.onerror=function(e){ alert("Error inicializando IndexedDB"); };
 
 // LOGIN
@@ -186,47 +189,44 @@ function mostrarArchivos(){
   if(!db) return;
   const transaction=db.transaction(["docs"],"readonly");
   const store=transaction.objectStore("docs");
-  const req=store.openCursor();
+  const req=store.getAll();
   const curso=cursoSelect.value;
   const logged=localStorage.getItem("logged");
-  let gridMap={};
   req.onsuccess=function(e){
-    const cursor=e.target.result;
-    if(cursor){
-      const f=cursor.value;
+    const allFiles=e.target.result;
+    let gridMap={};
+    allFiles.forEach(f=>{
       if(f.curso===curso){
         if(!gridMap[f.semana]) gridMap[f.semana]=[];
         gridMap[f.semana].push(f);
       }
-      cursor.continue();
-    } else {
-      docsContainer.innerHTML="";
-      Object.keys(gridMap).sort((a,b)=>parseInt(a.replace("Semana ",""))-parseInt(b.replace("Semana ",""))).forEach(semana=>{
-        let h4=document.createElement("h4"); h4.textContent=semana; docsContainer.appendChild(h4);
-        let grid=document.createElement("div"); grid.className="files-grid";
-        gridMap[semana].forEach(f=>{
-          const ext=f.name.split('.').pop().toLowerCase();
-          let preview="";
-          if(["png","jpg","jpeg","gif","webp"].includes(ext)) preview=`<img src="${f.data}">`;
-          else if(ext==="pdf") preview=`<iframe src="${f.data}"></iframe>`;
-          else preview=`<div style="padding:10px;text-align:center;">📄</div>`;
-          let div=document.createElement("div");
-          div.className="file-item";
-          div.innerHTML=`
-            <div class="file-preview">${preview}</div>
-            <div class="file-name">${f.name}</div>
-            <div class="file-actions">
-              <a href="${f.data}" target="_blank" class="btn-view" onclick='mostrarVista(${JSON.stringify(f)});return false;'>Ver</a>
-              <a href="${f.data}" download="${f.name}" class="btn-download">Descargar</a>
-              ${logged==="DAGA"?`<button class="btn-delete" onclick="eliminar(${f.id})">Eliminar</button>`:""}
-            </div>
-            <div class="overlay">${curso} — ${f.semana}</div>
-          `;
-          grid.appendChild(div);
-        });
-        docsContainer.appendChild(grid);
+    });
+    docsContainer.innerHTML="";
+    Object.keys(gridMap).sort((a,b)=>parseInt(a.replace("Semana ",""))-parseInt(b.replace("Semana ",""))).forEach(semana=>{
+      let h4=document.createElement("h4"); h4.textContent=semana; docsContainer.appendChild(h4);
+      let grid=document.createElement("div"); grid.className="files-grid";
+      gridMap[semana].forEach(f=>{
+        const ext=f.name.split('.').pop().toLowerCase();
+        let preview="";
+        if(["png","jpg","jpeg","gif","webp"].includes(ext)) preview=`<img src="${f.data}">`;
+        else if(ext==="pdf") preview=`<iframe src="${f.data}"></iframe>`;
+        else preview=`<div style="padding:10px;text-align:center;">📄</div>`;
+        let div=document.createElement("div");
+        div.className="file-item";
+        div.innerHTML=`
+          <div class="file-preview">${preview}</div>
+          <div class="file-name">${f.name}</div>
+          <div class="file-actions">
+            <a href="${f.data}" target="_blank" class="btn-view" onclick='mostrarVista(${JSON.stringify(f)});return false;'>Ver</a>
+            <a href="${f.data}" download="${f.name}" class="btn-download">Descargar</a>
+            ${logged==="DAGA"?`<button class="btn-delete" onclick="eliminar(${f.id})">Eliminar</button>`:""}
+          </div>
+          <div class="overlay">${curso} — ${f.semana}</div>
+        `;
+        grid.appendChild(div);
       });
-    }
+      docsContainer.appendChild(grid);
+    });
   };
 }
 
@@ -270,5 +270,7 @@ cursoSelect.onchange=mostrarArchivos;
 </script>
 </body>
 </html>
+
+
 
 
