@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Portafolio — Inicio</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; background:#000; color:#f1f5f9; }
+header { position: sticky; top: 0; background: linear-gradient(90deg, #0f172a, #1f2937); color: white; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; z-index: 999; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
+.brand { display:flex; gap:12px; align-items:center; }
+.brand img { width:48px; height:48px; border-radius:50%; object-fit:cover; }
+.brand .title { font-weight:700; font-size:18px; }
+.brand .subtitle { font-size:13px; color:#cbd5e1; }
+nav a { color:white; text-decoration:none; margin-left:15px; font-weight:500; }
+nav a:hover { text-decoration:underline; }
+.controls { display:flex; gap:12px; align-items:center; }
+select { background:#111827; color:#fff; padding:6px 8px; border-radius:8px; border:1px solid rgba(255,255,255,0.2); }
+button { background:#111827; color:#fff; padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); cursor:pointer; transition: all 0.2s ease; }
+button:hover { opacity: 0.9; }
+button.primary { background:#06b6d4; color:#042027; border:none; font-weight:600; }
+.hidden { display:none !important; }
+main { max-width:1100px; margin:22px auto; padding:0 16px; }
+.presentacion { display: flex; align-items: center; gap: 24px; background:#1e293b; padding:20px; border-radius:12px; border:1px solid #334155; }
+.presentacion img { width:180px; height:180px; border-radius:12px; object-fit:cover; border:3px solid #06b6d4; }
+.presentacion .texto h2 { margin-bottom:10px; color:#38bdf8; }
+.presentacion .texto p { line-height:1.5; color:#e2e8f0; }
+.panel { margin-top: 24px; background:#1e293b; padding:16px; border-radius:12px; border:1px solid #334155; }
+.flex-box { display:flex; gap:20px; }
+.listado { flex:1; }
+.vista { flex:2; background:#0f172a; border-radius:10px; padding:12px; min-height:250px; display:flex; align-items:center; justify-content:center; }
+.tarea { cursor:pointer; padding:6px; border-bottom:1px solid #334155; }
+.tarea:hover { background:#334155; }
+h4 { margin:10px 0; color:#38bdf8; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <img src="UPLA.jpg" alt="Logo">
+    <div>
+      <div class="title">Guerra Yarupaita Carlos Daniel </div>
+      <div class="subtitle">Portafolio Cursos</div>
+    </div>
+  </div>
+  <nav>
+    <a href="index.html">Inicio</a>
+    <a href="cursos.html">Cursos</a>
+    <a href="contacto.html">Contacto</a>
+    <a href="mensajes.html">Mensajes</a>
+  </nav>
+  <div class="controls">
+    <select id="cursoSelectHeader">
+      <option value="Arquitectura de Datos">Arquitectura de Datos</option>
+      <option value="Inglés IV">Inglés IV</option>
+      <option value="Gobierno de TI">Gobierno de TI</option>
+      <option value="Machine Learning">Machine Learning</option>
+    </select>
+    <div id="userGreeting" class="small">Bienvenido, invitado</div>
+    <button id="loginBtn">Login</button>
+  </div>
+</header>
+
+<main>
+<section class="presentacion">
+  <img src="YO.jpg" alt="Foto de perfil">
+  <div class="texto">
+    <h2>Bienvenido a mi Portafolio</h2>
+    <p>
+      Este portafolio contiene la organización de mis cursos:
+      <b>Arquitectura de Datos, Gobierno de TI, Machine Learning y Inglés IV</b>.  
+      En cada curso encontrarás los trabajos organizados por semanas (16 en total).  
+      Esta página de inicio sirve como presentación con una foto y un resumen de mi trayectoria académica.
+    </p>
+  </div>
+</section>
+
+
+
+<script>
+
+// Login
+loginBtn.onclick = ()=> modal.style.display="flex";
+closeModal.onclick = ()=> modal.style.display="none";
+doLogin.onclick = ()=> {
+  let user = document.getElementById("username").value.trim();
+  let pass = document.getElementById("password").value.trim();
+  if(user==="DAGA" && pass==="74128745"){
+    modal.style.display="none";
+    localStorage.setItem("logged","DAGA");
+    userGreeting.textContent="Bienvenido, "+user;
+    mostrarSemanas();
+  } else { alert("Usuario o contraseña incorrectos"); }
+};
+
+
+</script>
+</body>
+</html>

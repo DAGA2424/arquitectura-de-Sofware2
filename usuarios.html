@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Administrar Usuarios</title>
+<style>
+/* ===== Estilo general ===== */
+body { 
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; 
+    background:#0f172a; 
+    color:#fff; 
+    display:flex; 
+    justify-content:center; 
+    align-items:center; 
+    min-height:100vh; 
+    margin:0;
+}
+
+/* ===== Contenedor central ===== */
+.container {
+    background: rgba(17, 24, 39, 0.95);
+    padding: 30px 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    width: 350px;
+    text-align:center;
+}
+
+/* ===== Títulos ===== */
+h2 {
+    color:#06b6d4;
+    margin-bottom: 20px;
+    text-shadow: 1px 1px 6px #0ea5e9;
+}
+
+/* ===== Inputs y select ===== */
+input, select {
+    padding:10px;
+    margin:8px 0;
+    border-radius:8px;
+    border:none;
+    width:100%;
+    font-size:16px;
+}
+
+/* ===== Botones ===== */
+button { 
+    padding:10px 14px; 
+    margin-top:12px; 
+    border-radius:8px; 
+    border:none; 
+    cursor:pointer; 
+    font-weight:600; 
+    font-size:16px; 
+    transition: all 0.3s ease;
+}
+button#addBtn { 
+    background: linear-gradient(90deg, #06b6d4, #0ea5e9); 
+    color:#000; 
+}
+button#addBtn:hover {
+    transform: scale(1.05);
+}
+
+/* ===== Lista de usuarios ===== */
+.user-list { margin-top:25px; }
+.user-item { 
+    background: linear-gradient(90deg, #1e40af, #4338ca); 
+    padding:10px; 
+    margin-bottom:8px; 
+    border-radius:10px; 
+    display:flex; 
+    justify-content:space-between; 
+    align-items:center;
+    font-weight:600;
+    color:#fff;
+    text-shadow: 1px 1px 3px #000;
+}
+.user-item button { 
+    background:#f59e0b; 
+    color:#000; 
+    padding:6px 10px; 
+    border-radius:6px; 
+    font-weight:600;
+}
+.user-item button:hover {
+    transform: scale(1.1);
+    background:#facc15;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Administrar Usuarios</h2>
+    <input id="newUser" type="text" placeholder="Nombre de usuario">
+    <select id="roleSelect">
+      <option value="admin">Admin</option>
+      <option value="usuario">Usuario</option>
+      <option value="invitado">Invitado</option>
+    </select>
+    <button id="addBtn">Agregar Usuario</button>
+
+    <div class="user-list" id="userList"></div>
+</div>
+
+<script>
+const addBtn = document.getElementById("addBtn");
+const newUser = document.getElementById("newUser");
+const roleSelect = document.getElementById("roleSelect");
+const userList = document.getElementById("userList");
+
+// Inicializar storage
+if(!localStorage.getItem("users")) localStorage.setItem("users", JSON.stringify([]));
+
+// Cargar lista
+function cargarUsuarios(){
+  userList.innerHTML="";
+  const users = JSON.parse(localStorage.getItem("users"));
+  users.forEach((u,i)=>{
+    let div = document.createElement("div");
+    div.className="user-item";
+    div.innerHTML = `<span>${u.name} (${u.role})</span> <button onclick="eliminarUsuario(${i})">Eliminar</button>`;
+    userList.appendChild(div);
+  });
+}
+cargarUsuarios();
+
+// Agregar usuario
+addBtn.onclick = ()=>{
+  const name = newUser.value.trim();
+  const role = roleSelect.value;
+  if(!name){ alert("Ingrese nombre"); return; }
+  const users = JSON.parse(localStorage.getItem("users"));
+  users.push({name, role});
+  localStorage.setItem("users", JSON.stringify(users));
+  newUser.value="";
+  cargarUsuarios();
+};
+
+// Eliminar usuario
+function eliminarUsuario(i){
+  const users = JSON.parse(localStorage.getItem("users"));
+  users.splice(i,1);
+  localStorage.setItem("users", JSON.stringify(users));
+  cargarUsuarios();
+}
+</script>
+
+</body>
+</html>
