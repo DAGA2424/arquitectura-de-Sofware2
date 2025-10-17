@@ -1,238 +1,207 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Portafolio — Inicio</title>
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; background:#000; color:#f1f5f9; }
-header { position: sticky; top: 0; background: linear-gradient(90deg, #0f172a, #1f2937); color: white; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; z-index: 999; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
-.brand { display:flex; gap:12px; align-items:center; }
-.brand img { width:48px; height:48px; border-radius:50%; object-fit:cover; }
-.brand .title { font-weight:700; font-size:18px; }
-.brand .subtitle { font-size:13px; color:#cbd5e1; }
-nav a { color:white; text-decoration:none; margin-left:15px; font-weight:500; }
-nav a:hover { text-decoration:underline; }
-.controls { display:flex; gap:12px; align-items:center; }
-select { background:#111827; color:#fff; padding:6px 8px; border-radius:8px; border:1px solid rgba(255,255,255,0.2); }
-button { background:#111827; color:#fff; padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); cursor:pointer; transition: all 0.2s ease; }
-button:hover { opacity: 0.9; }
-button.primary { background:#06b6d4; color:#042027; border:none; font-weight:600; }
-.hidden { display:none !important; }
-main { max-width:1100px; margin:22px auto; padding:0 16px; }
-
-/* Carrusel y paneles */
-.carrusel { position: relative; width: 100%; height: 400px; border-radius: 16px; overflow: hidden; margin-bottom: 20px; border: 2px solid #334155; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
-.carrusel img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; opacity: 0; transition: opacity 1.5s ease-in-out, transform 8s ease; }
-.carrusel img.active { opacity: 1; transform: scale(1.05); }
-.carrusel .texto { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ffffff; font-size: 36px; font-weight: 700; text-align: center; text-shadow: 2px 2px 20px rgba(0,0,0,0.7); opacity: 0; animation: fadeIn 1.5s forwards; }
-@keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -55%); } to { opacity: 1; transform: translate(-50%, -50%); } }
-.carrusel .puntos { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; }
-.carrusel .puntos span { width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,0.6); cursor: pointer; transition: 0.4s; }
-.carrusel .puntos span:hover { transform: scale(1.3); background: #06b6d4; }
-.carrusel .puntos span.active { background: #06b6d4; box-shadow: 0 0 8px #06b6d4; }
-
-/* Panel cursos */
-.panel { margin-top: 20px; padding: 20px; background: rgba(30, 41, 59, 0.85); border-radius: 16px; backdrop-filter: blur(10px); box-shadow: 0 6px 16px rgba(0,0,0,0.4); }
-.panel h3 { margin-bottom: 16px; color: #06b6d4; font-size: 22px; font-weight: 600; border-bottom: 2px solid #06b6d4; display: inline-block; padding-bottom: 4px; }
-.flex-box { display: flex; gap: 20px; }
-.listado { width: 35%; max-height: 400px; overflow-y: auto; padding: 14px; border-radius: 10px; background: rgba(17, 24, 39, 0.9); }
-.listado h4 { margin: 12px 0 6px; font-size: 15px; color: #22d3ee; }
-.tarea { padding: 8px 10px; background: #1f2937; margin: 6px 0; border-radius: 8px; cursor: pointer; font-size: 14px; transition: 0.3s; }
-.tarea:hover { background: #374151; transform: translateX(4px); }
-.vista { flex: 1; background: #0f172a; border-radius: 10px; padding: 16px; display: flex; align-items: center; justify-content: center; min-height: 400px; overflow: auto; box-shadow: inset 0 0 10px rgba(255,255,255,0.05); }
-.vista img, .vista iframe { max-width: 100%; max-height: 100%; border-radius: 10px; }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mi Página - Login con Supabase y Google</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Supabase JS SDK -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  
 </head>
 <body>
+  <header class="main-header">
+    <div class="logo">
+    <img src="documentos/UPLA.jpg" alt="Logo UPLA" class="logo-img">
+    <h1 class="logo-text">CARLOS DANIEL GUERRA YARUPAITA</h1>
+  </div>
 
-<header>
-  <div class="brand">
-    <img src="UPLA.jpg" alt="Logo">
-    <div>
-      <div class="title">Guerra Yarupaita Carlos Daniel</div>
-      <div class="subtitle">Portafolio Cursos</div>
+    <nav class="main-nav">
+      <ul>
+        <li><a href="#inicio">Inicio</a></li>
+        <li><a href="#sobremi">Sobre mí</a></li>
+        <li><a href="#cursos">Cursos</a></li>
+        
+      </ul>
+    </nav>
+
+    <div class="header-actions">
+      <button id="loginBtn">Login</button>
+      <button id="logoutBtn" class="hidden">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main class="content">
+    <section id="inicio" class="hero-carousel">
+  <div class="carousel-container">
+    <div class="slide active">
+      <img src="documentos/upla2.jpeg" alt="Fondo completo" style="width: 100%; height: 700PX;">
+      <div class="overlay"></div>
+      <div class="slide-text">
+        <h2>UNIVERCIDAD PERUANA LOS ANDES</h2>
+        <p>Aprende, crece y transforma tu futuro</p>
+      </div>
+    </div>
+    <div class="slide active">
+      <img src="documentos/INGUPLA.jpg" alt="Fondo completo" style="width: 100%; height: 700PX;">
+    <div class="overlay"></div>
+      <div class="slide-text">
+        <h2>FACULTAD E INGENERIA</h2>
+        <p>Descubre el poder de la transformación tecnológica.</p>
+      </div>
+    </div>
+    <div class="slide active">
+      <img src="documentos/Html.png" alt="Fondo completo" style="width: 100%; height: 700PX;">
+    <div class="overlay"></div>
+      <div class="slide-text">
+        <h2>HTML</h2>
+        <p>Domina las bases del diseño</p>
+      </div>
+    </div>
+    <div class="slide active">
+      <img src="documentos/Css.png" alt="Fondo completo" style="width: 100%; height: 700PX;">
+    <div class="overlay"></div>
+      <div class="slide-text">
+        <h2>CSS</h2>
+        <p>Conviértete en un experto</p>
+      </div>
+    </div>
+    <div class="slide active">
+      <img src="documentos/Js.png" alt="Fondo completo" style="width: 100%; height: 700PX;">
+    <div class="overlay"></div>
+      <div class="slide-text">
+        <h2>JS</h2>
+        <p>Aprende a gestionar</p>
+      </div>
+    </div>
+    
+  </div>
+
+  <div class="carousel-controls">
+    <button class="prev">❮</button>
+    <button class="next">❯</button>
+  </div>
+</section>
+
+    <section id="sobremi" class="sobre-mi">
+  <div class="perfil-container">
+    <img src="documentos/YO.jpg" alt="Foto de perfil" class="perfil-img">
+
+    <div class="perfil-texto">
+      <h2>👋 Bienvenido a mi Portafolio</h2>
+      <p>
+        Soy un estudiante apasionado por la tecnología y el aprendizaje constante.  
+        En este portafolio encontrarás la organización de mis cursos:
+        <b>Arquitectura de Datos</b>, <b>Gobierno de TI</b>, <b>Machine Learning</b> e <b>Inglés IV</b>.  
+        Cada curso está estructurado por semanas (16 en total), mostrando mis avances y proyectos destacados.  
+        Me motiva aprender cosas nuevas, mejorar cada día y aplicar la tecnología para resolver problemas reales.
+      </p>
     </div>
   </div>
-  <nav>
-    <a href="index.html">Inicio</a>
-    <a href="cursos.html">Cursos</a>
-    <a href="contacto.html">Contacto</a>
-    <a href="mensajes.html">Mensajes</a>
-    <a href="sobremi.html">Sobre Mi</a>
-  </nav>
-  <div class="controls">
-    <select id="cursoSelectHeader">
-      <option value="Arquitectura de Datos">Arquitectura de Datos</option>
-      <option value="Inglés IV">Inglés IV</option>
-      <option value="Gobierno de TI">Gobierno de TI</option>
-      <option value="Machine Learning">Machine Learning</option>
-    </select>
-    <div id="userGreeting" class="small">Bienvenido, invitado</div>
-    <button id="loginBtn">Login</button>
-    <button id="addUserBtn">Agregar Usuario</button>
-  </div>
-</header>
 
-<main>
-  <!-- Carrusel -->
-  <section class="carrusel" id="carrusel">
-    <img src="UPLAp1.jpg" alt="Imagen 1" class="active">
-    <img src="INGUPLA.jpg" alt="Imagen 2">
-    <img src="html.jpeg" alt="Imagen 3">
-    <img src="css.jpeg" alt="Imagen 4">
-    <img src="js.png" alt="Imagen 5">
-    <div class="texto" id="textoCarrusel">Universidad Peruana Los Andes</div>
-    <div class="puntos" id="puntos"></div>
-  </section>
-
-  <!-- Explora tus cursos -->
-  <section class="panel">
-    <h3>Explora tus Cursos</h3>
-    <div class="flex-box">
-      <div class="listado" id="semanas"></div>
-      <div class="vista" id="vistaPreview">Selecciona una tarea para ver la vista previa</div>
+  <h3 class="gustos-titulo">💙 Mis Gustos e Intereses</h3>
+  <div class="gustos-grid">
+    <div class="gusto-card">
+      <img src="https://cdn-icons-png.flaticon.com/512/1055/1055687.png" alt="Computadoras">
+      <h4>Computadoras</h4>
+      <p>Me encanta explorar hardware y mejorar el rendimiento de los equipos.</p>
     </div>
-  </section>
-</main>
 
-<!-- Modal Login -->
-<div id="modal" style="display:none;position:fixed;inset:0;background:rgba(2,6,23,0.6);align-items:center;justify-content:center;z-index:1200;">
-  <div style="background:white;padding:18px;border-radius:10px;width:350px;box-shadow:0 8px 30px rgba(2,6,23,0.4);">
-    <h3>Iniciar sesión</h3>
-    <input id="username" type="text" placeholder="Usuario" style="width:100%;margin-bottom:10px;padding:8px;border:1px solid #cbd5e1;border-radius:8px;" />
-    <input id="password" type="password" placeholder="Contraseña" style="width:100%;margin-bottom:10px;padding:8px;border:1px solid #cbd5e1;border-radius:8px;" />
-    <div style="display:flex;gap:8px;margin-bottom:10px;">
-      <button class="roleBtn" data-role="admin">Admin</button>
-      <button class="roleBtn" data-role="usuario">Usuario</button>
-      <button class="roleBtn" data-role="invitado">Invitado</button>
+    <div class="gusto-card">
+      <img src="https://cdn-icons-png.flaticon.com/512/2721/2721293.png" alt="Programar">
+      <h4>Programar</h4>
+      <p>Disfruto crear soluciones y aplicaciones útiles mediante el código.</p>
     </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;">
-      <button id="closeModal">Cancelar</button>
-      <button id="doLogin" class="primary">Entrar</button>
+
+    <div class="gusto-card">
+      <img src="https://cdn-icons-png.flaticon.com/512/3081/3081860.png" alt="Juegos Online">
+      <h4>Juegos Online</h4>
+      <p>Juego para divertirme, competir y compartir buenos momentos con amigos.</p>
+    </div>
+
+    <div class="gusto-card">
+      <img src="https://cdn-icons-png.flaticon.com/512/476/476863.png" alt="Fútbol">
+      <h4>Fútbol</h4>
+      <p>El deporte que me enseña disciplina, trabajo en equipo y pasión.</p>
+    </div>
+
+    <div class="gusto-card">
+      <img src="https://cdn-icons-png.flaticon.com/512/201/201623.png" alt="Conocer Lugares">
+      <h4>Conocer Lugares</h4>
+      <p>Viajar me inspira, me conecta con nuevas culturas y experiencias.</p>
+    </div>
+
+    <div class="gusto-card">
+      <img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" alt="Gatos">
+      <h4>Gatos</h4>
+      <p>Los gatos me transmiten tranquilidad y son la mejor compañía.</p>
     </div>
   </div>
-</div>
+</section>
 
-<script>
-// Variables
-const loginBtn = document.getElementById("loginBtn");
-const modal = document.getElementById("modal");
-const closeModal = document.getElementById("closeModal");
-const doLogin = document.getElementById("doLogin");
-const userGreeting = document.getElementById("userGreeting");
-const cursoSelectHeader = document.getElementById("cursoSelectHeader");
-const semanasDiv = document.getElementById("semanas");
-const vista = document.getElementById("vistaPreview");
-const addUserBtn = document.getElementById("addUserBtn");
 
-let selectedRole = "invitado";
+<section id="cursos" class="cursos-section">
+  <h2>📚 Curso — Arquitectura de Software</h2>
+  <div class="cursos-container">
+    
+    <!-- 📅 Panel lateral de semanas -->
+    <aside class="semanas-panel">
+      <h3>Semanas</h3>
+      <ul id="semanasList"></ul>
+    </aside>
 
-// Roles botones
-document.querySelectorAll(".roleBtn").forEach(btn=>{
-  btn.onclick = ()=> selectedRole = btn.dataset.role;
-});
+    <!-- 👁️ Vista previa de documentos -->
+    <div class="preview-panel">
+      <h3 id="semanaTitulo">Selecciona una semana</h3>
 
-// Abrir modal
-loginBtn.onclick = ()=> modal.style.display="flex";
-closeModal.onclick = ()=> modal.style.display="none";
+      <!-- 📤 Subida de archivos (solo visible si el usuario está logueado) -->
+      <div id="uploadPanel" class="hidden">
+        <h3>📤 Subir documento</h3>
+        <label for="semanaSelect">Selecciona la semana:</label>
+        <select id="semanaSelect">
+          <option value="">-- Selecciona --</option>
+        </select>
+        <input type="file" id="fileUpload" />
+        <button id="uploadBtn">Subir archivo</button>
+        <p id="uploadStatus"></p>
+      </div>
 
-// Login
-doLogin.onclick = ()=>{
-  let user = document.getElementById("username").value.trim();
-  let pass = document.getElementById("password").value.trim();
+      <!-- 👁️ Documentos subidos -->
+      <div id="docsPreview" class="docs-preview">
+        <p>Selecciona una semana para ver los documentos subidos.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-  if(user && pass){
-    modal.style.display="none";
-    localStorage.setItem("logged", user);
-    localStorage.setItem("role", selectedRole);
-    userGreeting.textContent = `Bienvenido, ${user} (${selectedRole})`;
-    mostrarSemanas();
-  } else {
-    alert("Por favor ingresa usuario y contraseña");
-  }
-};
+  <footer class="main-footer">
+    <p>© 2025 — Mi Página Web con Supabase</p>
+  </footer>
 
-// Agregar Usuario
-addUserBtn.onclick = ()=> window.location.href = "usuarios.html";
+  <!-- 🔒 Modal de Login -->
+  <div id="loginModal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close" id="closeModal">&times;</span>
+      <h2>Iniciar Sesión</h2>
+      <form id="loginForm">
+        <label>Usuario
+          <input type="text" name="usuario" required>
+        </label>
+        <label>Contraseña
+          <input type="password" name="password" required>
+        </label>
+        <button type="submit" class="btn-login">Entrar</button>
+      </form>
 
-// Inicializar cursos
-const cursos = ["Inglés IV","Gobierno de TI","Machine Learning","Arquitectura de Datos"];
-if(!localStorage.getItem("docs")){
-  let initDocs = {};
-  cursos.forEach(c => { 
-    initDocs[c]={}; 
-    for(let i=1;i<=16;i++){ initDocs[c]["Semana "+i]=[]; }
-  });
-  localStorage.setItem("docs", JSON.stringify(initDocs));
-}
+      <div class="divider">o</div>
+      <button id="googleBtn" class="btn-google">
+        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width="20">
+        Unirme con Google
+      </button>
+    </div>
+  </div>
 
-// Mostrar semanas
-function mostrarSemanas(){
-  semanasDiv.innerHTML = "";
-  const curso = cursoSelectHeader.value;
-  const docs = JSON.parse(localStorage.getItem("docs")) || {};
-  if(!docs[curso]) { semanasDiv.innerHTML="No hay tareas"; return; }
-  Object.keys(docs[curso]).forEach(semana=>{
-    let h4 = document.createElement("h4");
-    h4.textContent = semana;
-    semanasDiv.appendChild(h4);
-    docs[curso][semana].forEach(tarea=>{
-      let div = document.createElement("div");
-      div.className = "tarea";
-      div.textContent = tarea.name || tarea;
-      div.onclick = ()=> mostrarVista(tarea);
-      semanasDiv.appendChild(div);
-    });
-  });
-}
-
-// Vista de tareas
-function mostrarVista(tarea){
-  let name = tarea.name || tarea;
-  let data = tarea.data || tarea;
-  let ext=name.split(".").pop().toLowerCase();
-  if(["png","jpg","jpeg","gif","webp"].includes(ext)){
-    vista.innerHTML = `<img src="${data}" alt="${name}">`;
-  } else if(ext==="pdf"){
-    vista.innerHTML = `<iframe src="${data}" style="width:100%;height:100%;border:none;"></iframe>`;
-  } else {
-    vista.innerHTML = `<div>📄 ${name}</div>`;
-  }
-}
-
-// Carrusel
-const imgs = document.querySelectorAll("#carrusel img");
-const textos = ["Universidad Peruana Los Andes","Ingeniería","HTML","CSS","JavaScript"];
-const textoCarrusel = document.getElementById("textoCarrusel");
-const puntosDiv = document.getElementById("puntos");
-let index = 0;
-imgs.forEach((_,i)=>{
-  let span=document.createElement("span");
-  if(i===0) span.classList.add("active");
-  span.onclick=()=>{ mostrarImagen(i); };
-  puntosDiv.appendChild(span);
-});
-function mostrarImagen(i){
-  imgs[index].classList.remove("active");
-  puntosDiv.children[index].classList.remove("active");
-  index=i;
-  imgs[index].classList.add("active");
-  puntosDiv.children[index].classList.add("active");
-  textoCarrusel.textContent=textos[index];
-}
-setInterval(()=>{ mostrarImagen((index+1)%imgs.length); },4000);
-
-// Cargar estado inicial
-window.onload = ()=>{
-  const logged = localStorage.getItem("logged");
-  const role = localStorage.getItem("role") || "invitado";
-  if(logged) userGreeting.textContent=`Bienvenido, ${logged} (${role})`;
-  mostrarSemanas();
-};
-cursoSelectHeader.onchange = mostrarSemanas;
-</script>
-
+  <script src="script.js" defer></script>
 </body>
 </html>
+
