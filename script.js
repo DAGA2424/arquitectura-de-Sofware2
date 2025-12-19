@@ -1,8 +1,6 @@
 // === 🚀 CONFIGURACIÓN DE SUPABASE ===
 const SUPABASE_URL = "https://eoczwvclmwwxjrvbtwjm.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvY3p3dmNsbXd3eGpydmJ0d2ptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwMzUzMTEsImV4cCI6MjA3NTYxMTMxMX0.5mvtMVVlyWKVx_UIuxpM-ZY_UNcJL_im3VLAWHbiPQQ";
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 console.log("✅ Conectado a Supabase:", SUPABASE_URL);
 
 
@@ -220,5 +218,6 @@ document.addEventListener("DOMContentLoaded", () => {
   showSlide(index);
   startAutoSlide();
 });
+
 
 
