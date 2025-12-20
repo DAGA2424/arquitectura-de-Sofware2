@@ -1,10 +1,16 @@
-// === 🚀 CONFIGURACIÓN DE SUPABASE ===
+/************** SUPABASE CONFIG **************/
 const SUPABASE_URL = "https://eoczwvclmwwxjrvbtwjm.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvY3p3dmNsbXd3eGpydmJ0d2ptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwMzUzMTEsImV4cCI6MjA3NTYxMTMxMX0.5mvtMVVlyWKVx_UIuxpM-ZY_UNcJL_im3VLAWHbiPQQ;
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvY3p3dmNsbXd3eGpydmJ0d2ptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwMzUzMTEsImV4cCI6MjA3NTYxMTMxMX0.5mvtMVVlyWKVx_UIuxpM-ZY_UNcJL_im3VLAWHbiPQQ";
 
+// ⚠️ NO DECLARAMOS supabase
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
 
+console.log("Supabase listo", supabaseClient);
 
-// === 📅 GENERAR LISTA DE 16 SEMANAS ===
+/************** ELEMENTOS DOM **************/
 const semanasList = document.getElementById("semanasList");
 const docsPreview = document.getElementById("docsPreview");
 const semanaTitulo = document.getElementById("semanaTitulo");
@@ -14,210 +20,156 @@ const uploadBtn = document.getElementById("uploadBtn");
 const uploadStatus = document.getElementById("uploadStatus");
 const semanaSelect = document.getElementById("semanaSelect");
 
-// Crear lista de semanas
+/************** GENERAR SEMANAS **************/
 for (let i = 1; i <= 16; i++) {
   const li = document.createElement("li");
   li.textContent = `Semana ${i}`;
-  li.addEventListener("click", () => mostrarDocumentos(i));
+  li.onclick = () => mostrarDocumentos(i);
   semanasList.appendChild(li);
 
-  // También llenar el selector en el panel de subida
-  const option = document.createElement("option");
-  option.value = i;
-  option.textContent = `Semana ${i}`;
-  semanaSelect.appendChild(option);
+  const opt = document.createElement("option");
+  opt.value = i;
+  opt.textContent = `Semana ${i}`;
+  semanaSelect.appendChild(opt);
 }
 
-
-// === 🧾 MOSTRAR DOCUMENTOS DE CADA SEMANA ===
+/************** MOSTRAR DOCUMENTOS **************/
 async function mostrarDocumentos(semana) {
-  semanaTitulo.textContent = `📖 Documentos — Semana ${semana}`;
-  docsPreview.innerHTML = "Cargando documentos...";
+  semanaTitulo.textContent = `Documentos - Semana ${semana}`;
+  docsPreview.innerHTML = "Cargando...";
 
-  const { data, error } = await supabase.storage.from("documentos").list(`semana${semana}/`);
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: sessionData } = await supabaseClient.auth.getSession();
+
+  const { data, error } = await supabaseClient
+    .storage
+    .from("documentos")
+    .list(`semana${semana}`);
 
   if (error) {
-    docsPreview.innerHTML = `<p>Error al cargar: ${error.message}</p>`;
+    docsPreview.innerHTML = "Error al cargar documentos";
     return;
   }
 
-  if (!data || data.length === 0) {
-    docsPreview.innerHTML = "<p>No hay documentos subidos todavía.</p>";
+  if (!data.length) {
+    docsPreview.innerHTML = "No hay documentos";
     return;
   }
 
   docsPreview.innerHTML = "";
+
   data.forEach(file => {
     const url = `${SUPABASE_URL}/storage/v1/object/public/documentos/semana${semana}/${file.name}`;
 
-    const fileDiv = document.createElement("div");
-    fileDiv.classList.add("file-item");
+    const div = document.createElement("div");
 
-    // Vista previa según tipo de archivo
-    let contenido;
-    if (file.name.endsWith(".pdf")) {
-      contenido = document.createElement("iframe");
-      contenido.src = url;
-    } else if (file.name.match(/\.(jpg|jpeg|png)$/)) {
-      contenido = document.createElement("img");
-      contenido.src = url;
-    } else {
-      contenido = document.createElement("a");
-      contenido.href = url;
-      contenido.textContent = file.name;
-      contenido.target = "_blank";
-    }
+    const link = document.createElement("a");
+    link.href = url;
+    link.textContent = file.name;
+    link.target = "_blank";
 
-    fileDiv.appendChild(contenido);
+    div.appendChild(link);
 
-    // Mostrar botón eliminar si está logueado
-    if (session) {
-      const deleteBtn = document.createElement("button");
-      deleteBtn.textContent = "🗑️ Eliminar";
-      deleteBtn.classList.add("delete-btn");
-      deleteBtn.addEventListener("click", async () => {
-        if (!confirm(`¿Deseas eliminar "${file.name}"?`)) return;
-
-        const { error: deleteError } = await supabase.storage
+    if (sessionData.session) {
+      const del = document.createElement("button");
+      del.textContent = "Eliminar";
+      del.onclick = async () => {
+        await supabase.storage
           .from("documentos")
           .remove([`semana${semana}/${file.name}`]);
-
-        if (deleteError) alert("❌ Error al eliminar: " + deleteError.message);
-        else {
-          alert("✅ Archivo eliminado correctamente.");
-          mostrarDocumentos(semana);
-        }
-      });
-      fileDiv.appendChild(deleteBtn);
+        mostrarDocumentos(semana);
+      };
+      div.appendChild(del);
     }
 
-    docsPreview.appendChild(fileDiv);
+    docsPreview.appendChild(div);
   });
 }
 
-
-// === 🚀 SUBIR ARCHIVOS (SOLO USUARIOS LOGUEADOS) ===
-uploadBtn.addEventListener("click", async () => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return alert("Debes iniciar sesión para subir documentos.");
+/************** SUBIR ARCHIVOS **************/
+uploadBtn.onclick = async () => {
+  const { data } = await supabaseClient.auth.getSession();
+  if (!data.session) {
+    alert("Debes iniciar sesión");
+    return;
+  }
 
   const file = fileUpload.files[0];
-  const semanaSeleccionada = semanaSelect.value;
+  const semana = semanaSelect.value;
 
-  if (!semanaSeleccionada) return alert("Selecciona una semana.");
-  if (!file) return alert("Selecciona un archivo primero.");
+  if (!file || !semana) {
+    alert("Seleccione semana y archivo");
+    return;
+  }
 
   uploadStatus.textContent = "Subiendo...";
 
-  const { error } = await supabase.storage
+  const { error } = await supabaseClient.storage
     .from("documentos")
-    .upload(`semana${semanaSeleccionada}/${file.name}`, file, { upsert: true });
+    .upload(`semana${semana}/${file.name}`, file, { upsert: true });
 
-  if (error) uploadStatus.textContent = "❌ Error: " + error.message;
-  else {
-    uploadStatus.textContent = "✅ Archivo subido correctamente.";
+  if (error) {
+    uploadStatus.textContent = "Error al subir";
+  } else {
+    uploadStatus.textContent = "Archivo subido";
     fileUpload.value = "";
-    mostrarDocumentos(semanaSeleccionada);
+    mostrarDocumentos(semana);
   }
-});
+};
 
+/************** LOGIN / LOGOUT **************/
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const loginModal = document.getElementById("loginModal");
+const closeModal = document.getElementById("closeModal");
+const loginForm = document.getElementById("loginForm");
+const googleBtn = document.getElementById("googleBtn");
 
-// === 🔐 LOGIN Y AUTENTICACIÓN ===
-document.addEventListener("DOMContentLoaded", () => {
-  const loginBtn = document.getElementById("loginBtn");
-  const loginModal = document.getElementById("loginModal");
-  const closeModal = document.getElementById("closeModal");
-  const googleBtn = document.getElementById("googleBtn");
-  const loginForm = document.getElementById("loginForm");
-  const logoutBtn = document.getElementById("logoutBtn");
+loginBtn.onclick = () => loginModal.classList.remove("hidden");
+closeModal.onclick = () => loginModal.classList.add("hidden");
 
-  // Abrir y cerrar modal
-  loginBtn.addEventListener("click", () => loginModal.classList.remove("hidden"));
-  closeModal.addEventListener("click", () => loginModal.classList.add("hidden"));
-  window.addEventListener("click", e => { if (e.target === loginModal) loginModal.classList.add("hidden"); });
+loginForm.onsubmit = async e => {
+  e.preventDefault();
 
-  // Login con correo y contraseña
-  loginForm.addEventListener("submit", async e => {
-    e.preventDefault();
-    const usuario = e.target.usuario.value;
-    const password = e.target.password.value;
+  const email = e.target.usuario.value;
+  const password = e.target.password.value;
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: usuario, password
-    });
-
-    if (error) alert("Error al iniciar sesión: " + error.message);
-    else {
-      alert("Bienvenido, " + data.user.email);
-      loginModal.classList.add("hidden");
-      loginForm.reset();
-    }
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email, password
   });
 
-  // Login con Google
-  googleBtn.addEventListener("click", async () => {
-    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
-    if (error) alert("Error al iniciar con Google: " + error.message);
-  });
+  if (error) alert(error.message);
+  else loginModal.classList.add("hidden");
+};
 
-  // Logout
-  logoutBtn.addEventListener("click", async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) alert("❌ Error al cerrar sesión: " + error.message);
-    else alert("👋 Sesión cerrada correctamente.");
-  });
+googleBtn.onclick = async () => {
+  await supabaseClient.auth.signInWithOAuth({ provider: "google" });
+};
 
-  checkSession(); // Al cargar
-});
+logoutBtn.onclick = async () => {
+  await supabaseClient.auth.signOut();
+};
 
-
-// === 👤 VERIFICAR SESIÓN ACTUAL ===
+/************** SESIÓN **************/
 async function checkSession() {
-  const { data: { session } } = await supabase.auth.getSession();
-  const uploadPanel = document.getElementById("uploadPanel");
-  const loginBtn = document.getElementById("loginBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
+  const { data } = await supabaseClient.auth.getSession();
 
-  if (session) {
+  if (data.session) {
     uploadPanel.classList.remove("hidden");
-    loginBtn.textContent = `👋 ${session.user.email}`;
     logoutBtn.classList.remove("hidden");
+    loginBtn.textContent = data.session.user.email;
   } else {
     uploadPanel.classList.add("hidden");
-    loginBtn.textContent = "Login";
     logoutBtn.classList.add("hidden");
+    loginBtn.textContent = "Login";
   }
 }
 
-// Detectar cambios en la sesión
-supabase.auth.onAuthStateChange((event, session) => {
-  if (event === "SIGNED_IN") checkSession();
-  if (event === "SIGNED_OUT") checkSession();
+supabaseClient.auth.onAuthStateChange(() => {
+  checkSession();
 });
 
+checkSession();
 
-// === 🎠 CARRUSEL AUTOMÁTICO DE INICIO ===
-document.addEventListener("DOMContentLoaded", () => {
-  const slides = document.querySelectorAll(".slide");
-  const prevBtn = document.querySelector(".prev");
-  const nextBtn = document.querySelector(".next");
-  let index = 0;
-  let interval;
-
-  const showSlide = i => slides.forEach((slide, idx) => slide.classList.toggle("active", idx === i));
-  const nextSlide = () => { index = (index + 1) % slides.length; showSlide(index); };
-  const prevSlideFn = () => { index = (index - 1 + slides.length) % slides.length; showSlide(index); };
-
-  const startAutoSlide = () => interval = setInterval(nextSlide, 5000);
-  const resetInterval = () => { clearInterval(interval); startAutoSlide(); };
-
-  prevBtn.addEventListener("click", () => { prevSlideFn(); resetInterval(); });
-  nextBtn.addEventListener("click", () => { nextSlide(); resetInterval(); });
-
-  showSlide(index);
-  startAutoSlide();
-});
 
 
 
