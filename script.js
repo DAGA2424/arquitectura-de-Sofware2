@@ -10,6 +10,44 @@ const supabaseClient = supabase.createClient(
 
 console.log("Supabase listo", supabaseClient);
 
+const slides = document.querySelectorAll(".slide");
+const dots = document.querySelectorAll(".dot");
+const next = document.querySelector(".next");
+const prev = document.querySelector(".prev");
+
+let index = 0;
+
+function showSlide(i) {
+slides.forEach(slide => slide.classList.remove("active"));
+dots.forEach(dot => dot.classList.remove("active"));
+    
+slides[i].classList.add("active");
+dots[i].classList.add("active");
+  }
+
+next.addEventListener("click", () => {
+index = (index + 1) % slides.length;
+showSlide(index);
+  });
+
+prev.addEventListener("click", () => {
+    index = (index - 1 + slides.length) % slides.length;
+    showSlide(index);
+  });
+
+dots.forEach((dot, i) => {
+    dot.addEventListener("click", () => {
+      index = i;
+      showSlide(index);
+    });
+  });
+
+  // Auto play
+setInterval(() => {
+    index = (index + 1) % slides.length;
+    showSlide(index);
+  }, 5000);
+  
 /************** ELEMENTOS DOM **************/
 const semanasList = document.getElementById("semanasList");
 const docsPreview = document.getElementById("docsPreview");
@@ -33,12 +71,12 @@ for (let i = 1; i <= 16; i++) {
   semanaSelect.appendChild(opt);
 }
 
-/************** MOSTRAR DOCUMENTOS **************/
 async function mostrarDocumentos(semana) {
   semanaTitulo.textContent = `Documentos - Semana ${semana}`;
   docsPreview.innerHTML = "Cargando...";
 
   const { data: sessionData } = await supabaseClient.auth.getSession();
+  const isLogged = !!sessionData.session;
 
   const { data, error } = await supabaseClient
     .storage
@@ -58,32 +96,72 @@ async function mostrarDocumentos(semana) {
   docsPreview.innerHTML = "";
 
   data.forEach(file => {
-    const url = `${SUPABASE_URL}/storage/v1/object/public/documentos/semana${semana}/${file.name}`;
+    const fileUrl = `${SUPABASE_URL}/storage/v1/object/public/documentos/semana${semana}/${file.name}`;
+    const ext = file.name.split('.').pop().toLowerCase();
 
-    const div = document.createElement("div");
+    const card = document.createElement("div");
+    card.className = "doc-card";
 
-    const link = document.createElement("a");
-    link.href = url;
-    link.textContent = file.name;
-    link.target = "_blank";
-
-    div.appendChild(link);
-
-    if (sessionData.session) {
-      const del = document.createElement("button");
-      del.textContent = "Eliminar";
-      del.onclick = async () => {
-        await supabase.storage
-          .from("documentos")
-          .remove([`semana${semana}/${file.name}`]);
-        mostrarDocumentos(semana);
-      };
-      div.appendChild(del);
+    /* ===== PREVISUALIZACIÓN ===== */
+    let preview;
+    if (ext === "pdf") {
+      preview = document.createElement("iframe");
+      preview.src = fileUrl;
+    } else if (["jpg", "jpeg", "png", "webp"].includes(ext)) {
+      preview = document.createElement("img");
+      preview.src = fileUrl;
+    } else {
+      preview = document.createElement("div");
+      preview.className = "no-preview";
+      preview.textContent = "Sin previsualización";
     }
 
-    docsPreview.appendChild(div);
+    /* ===== BOTONES ===== */
+    const actions = document.createElement("div");
+    actions.className = "doc-actions";
+
+    const verBtn = document.createElement("a");
+    verBtn.href = fileUrl;
+    verBtn.target = "_blank";
+    verBtn.textContent = "Ver";
+    verBtn.className = "btn ver";
+
+    const downloadBtn = document.createElement("a");
+    downloadBtn.href = fileUrl;
+    downloadBtn.download = file.name;
+    downloadBtn.textContent = "Descargar";
+    downloadBtn.className = "btn descargar";
+
+    actions.appendChild(verBtn);
+    actions.appendChild(downloadBtn);
+
+    /* ===== SOLO LOGUEADO → ELIMINAR ===== */
+    if (isLogged) {
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "Eliminar";
+      deleteBtn.className = "btn eliminar";
+
+      deleteBtn.onclick = async () => {
+        if (!confirm("¿Eliminar archivo?")) return;
+
+        await supabaseClient.storage
+          .from("documentos")
+          .remove([`semana${semana}/${file.name}`]);
+
+        mostrarDocumentos(semana);
+      };
+
+      actions.appendChild(deleteBtn);
+    }
+    
+
+    card.appendChild(preview);
+    card.appendChild(actions);
+    docsPreview.appendChild(card);
   });
+  
 }
+
 
 /************** SUBIR ARCHIVOS **************/
 uploadBtn.onclick = async () => {
@@ -164,14 +242,28 @@ async function checkSession() {
   }
 }
 
+// ===== FUNCIONES DEL MODAL (AQUÍ VAN) =====
+function abrirDocModal(url, ext) {
+  const modal = document.getElementById("docModal");
+  const body = document.getElementById("docModalBody");
+
+  if (ext === "pdf") {
+    body.innerHTML = `<iframe src="${url}"></iframe>`;
+  } else if (["jpg", "jpeg", "png", "webp"].includes(ext)) {
+    body.innerHTML = `<img src="${url}">`;
+  } else {
+    body.innerHTML = `<p>No se puede previsualizar este archivo</p>`;
+  }
+
+  modal.style.display = "block";
+}
+
+function cerrarDocModal() {
+  document.getElementById("docModal").style.display = "none";
+  document.getElementById("docModalBody").innerHTML = "";
+}
 supabaseClient.auth.onAuthStateChange(() => {
   checkSession();
 });
 
 checkSession();
-
-
-
-
-
-
